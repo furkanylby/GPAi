@@ -1,0 +1,103 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Speech.Synthesis;
+using System.Speech.Recognition;
+using System.IO;
+
+
+namespace GorselProgramlamaAi
+{
+    public partial class GPAi : Form
+    {
+        public bool wake = false;
+        public GPAi()
+        {
+            InitializeComponent();
+        }
+
+        SpeechSynthesizer s = new SpeechSynthesizer();
+        SpeechRecognitionEngine sr = new SpeechRecognitionEngine();
+        PromptBuilder pb = new PromptBuilder();
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            s.SelectVoiceByHints(VoiceGender.Female);
+            Choices list = new Choices();
+            list.Add(File.ReadAllLines(@"C:\GPAi\commands\commands.txt"));
+            // buradaki konuma bir commands dosyası oluşturun ve case içerisindeki verileri küçük harflerle ve alt alta yerleştirin
+            
+            Grammar gm = new Grammar(new GrammarBuilder(list));
+
+            try
+            {
+                sr.RequestRecognizerUpdate();
+                sr.LoadGrammar(gm);
+                sr.SpeechRecognized += Sr_SpeechRecognized;
+                sr.SetInputToDefaultAudioDevice();
+                sr.RecognizeAsync(RecognizeMode.Multiple);
+
+            }
+            catch
+            {
+                return;
+            }
+
+            pb.ClearContent();
+            pb.AppendText(richTextBox1.Text);
+            s.Speak(pb);
+
+
+        }
+
+        public void Say(string phrase)
+        {
+            s.SpeakAsync(phrase);
+            wake = false;
+            
+        }
+
+        private void Sr_SpeechRecognized(object sender, SpeechRecognizedEventArgs e)
+        {
+            string speechSaid = e.Result.Text;
+
+
+            if(speechSaid == "hey")
+            {
+                wake = true;
+            }
+
+
+            if (wake)
+            {
+
+
+
+                switch (speechSaid)
+                {
+                    case ("merhaba"):
+                        Say("hi");
+                        break;
+
+                    case ("how are you doing"):
+                        Say("good thanks");
+                        break;
+
+                }
+
+            }
+        }
+
+    }
+}
